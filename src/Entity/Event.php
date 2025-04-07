@@ -30,8 +30,6 @@ class Event
     #[ORM\Column]
     private ?float $prixMultipass = null;
 
-    // Getters et Setters
-
     public function getId(): ?int
     {
         return $this->id;
