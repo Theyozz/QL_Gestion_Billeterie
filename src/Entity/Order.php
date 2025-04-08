@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Entity\Event;
 use App\Entity\Ticket;
+use App\Entity\Participant;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -16,8 +17,9 @@ class Order
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $email = null;
+    #[ORM\ManyToOne(targetEntity: Participant::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Participant $participant = null;
 
     #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $dateCommande = null;
@@ -40,17 +42,6 @@ class Order
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getEmail(): ?string
-    {
-        return $this->email;
-    }
-
-    public function setEmail(string $email): self
-    {
-        $this->email = $email;
-        return $this;
     }
 
     public function getDateCommande(): ?\DateTimeInterface
@@ -83,6 +74,17 @@ class Order
     public function setEvent(?Event $event): self
     {
         $this->event = $event;
+        return $this;
+    }
+
+    public function getParticipant(): ?Participant
+    {
+        return $this->participant;
+    }
+
+    public function setParticipant(?Participant $participant): self
+    {
+        $this->participant = $participant;
         return $this;
     }
 
