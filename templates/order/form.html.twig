@@ -1,0 +1,99 @@
+<h1>Passer une commande</h1>
+
+<form action="{{ path('order_create') }}" method="POST">
+    <label for="email">Email :</label>
+    <input type="email" name="email" required><br>
+
+    <label for="event_id">Événement :</label>
+    <select name="event_id" id="event-select" required>
+        {% for event in events %}
+            <option value="{{ event.id }}">{{ event.nom }}</option>
+        {% endfor %}
+    </select><br>
+    
+    <label for="date">Date (si billet jour) :</label>
+    <select name="date" id="date-select">
+        <option value="" disabled selected>Choisir une date</option>
+    </select><br>
+
+    <!-- Affichage du prix de la date sélectionnée -->
+    <div id="price-display">
+        <p>Prix: <span id="price-value">0</span> €</p>
+    </div>
+
+    <hr>
+    <h3>Tickets</h3>
+
+    <div id="ticket-container">
+        <div class="ticket">
+            <label>Nom:</label>
+            <input type="text" name="ticket_names[]" required>
+            <label>Prénom:</label>
+            <input type="text" name="ticket_firstnames[]" required>
+            <label>Type:</label>
+            <select name="ticket_types[]" required>
+                <option value="jour">Jour</option>
+                <option value="multipass">Multipass</option>
+            </select>
+        </div>
+    </div>
+
+    <button type="button" onclick="addTicket()">+ Ajouter un ticket</button>
+    <br><br>
+    <button type="submit">Valider la commande</button>
+</form>
+
+<script>
+// Définition de la fonction addTicket
+function addTicket() {
+    const container = document.getElementById('ticket-container');
+    const template = container.firstElementChild.cloneNode(true);  // Clone le premier ticket
+    container.appendChild(template);  // Ajoute le clone au conteneur
+}
+
+// Récupérer les dates disponibles pour chaque événement en utilisant la variable Twig passée par le contrôleur
+const eventDates = {{ event_dates|json_encode|raw }};
+
+// Fonction pour mettre à jour les dates et les prix lors du changement de sélection d'événement
+document.getElementById('event-select').addEventListener('change', function () {
+    const eventId = this.value;
+    const dateSelect = document.getElementById('date-select');
+    const priceDisplay = document.getElementById('price-value');
+    
+    // Vider les options existantes dans le select date
+    dateSelect.innerHTML = '<option value="" disabled selected>Choisir une date</option>';
+
+    // Ajouter les options des dates et prix pour l'événement sélectionné
+    if (eventDates[eventId]) {
+        eventDates[eventId].forEach(dateData => {
+            const option = document.createElement('option');
+            option.value = dateData.date;
+            option.textContent = `${dateData.date} - ${dateData.price} €`;
+            dateSelect.appendChild(option);
+        });
+
+        // Afficher le prix de la première date disponible
+        if (eventDates[eventId].length > 0) {
+            priceDisplay.textContent = eventDates[eventId][0].price;
+        }
+    } else {
+        priceDisplay.textContent = '0'; // Aucun prix si pas de date
+    }
+});
+
+// Mettre à jour le prix affiché lorsque la date est sélectionnée
+document.getElementById('date-select').addEventListener('change', function () {
+    const eventId = document.getElementById('event-select').value;
+    const selectedDate = this.value;
+    const priceDisplay = document.getElementById('price-value');
+    
+    // Trouver le prix de la date sélectionnée
+    const selectedDateData = eventDates[eventId].find(dateData => dateData.date === selectedDate);
+    if (selectedDateData) {
+        priceDisplay.textContent = selectedDateData.price;
+    }
+});
+
+// Initialiser l'affichage avec les prix du premier événement sélectionné
+document.getElementById('event-select').dispatchEvent(new Event('change'));
+</script>
