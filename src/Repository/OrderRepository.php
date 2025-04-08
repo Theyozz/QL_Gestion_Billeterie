@@ -15,10 +15,11 @@ class OrderRepository extends ServiceEntityRepository
 
     public function save(Order $order, bool $flush = true): void
     {
-        $this->_em->persist($order);
+        $em = $this->getEntityManager();
+        $em->persist($order);
 
         if ($flush) {
-            $this->_em->flush();
+            $em->flush();
         }
     }
 }
