@@ -3,11 +3,9 @@ namespace App\Controller;
 
 use App\Entity\Order;
 use App\Entity\Ticket;
-use App\Entity\Participant;
 use App\Service\TicketService;
 use App\Repository\EventRepository;
 use App\Repository\OrderRepository;
-use App\Repository\ParticipantRepository;
 use DateTime;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,22 +19,23 @@ class OrderController extends AbstractController
         Request $request,
         TicketService $ticketService,
         EventRepository $eventRepository,
-        ParticipantRepository $participantRepository,
         OrderRepository $orderRepository
     ): JsonResponse {
+        // Récupération des données envoyées en POST
         $data = json_decode($request->getContent(), true);
 
-        $participant = $participantRepository->find($data['participant_id']);
+        // Vérification des données nécessaires
         $event = $eventRepository->find($data['event_id']);
+        $email = $data['email'] ?? null;
         $date = $data['date'] ?? null;
         $ticketsData = $data['tickets'] ?? [];
 
-        if (!$participant || !$event || empty($ticketsData)) {
+        if (!$email || !$event || empty($ticketsData)) {
             return $this->json(['error' => 'Invalid data'], 400);
         }
 
-        // Création de l'ordre avec les tickets
-        $order = $ticketService->createOrderWithTickets($participant, $event, $date, $ticketsData);
+        // Création de la commande avec les tickets
+        $order = $ticketService->createOrderWithTickets($email, $event, $date, $ticketsData);
 
         // Sauvegarde de l'ordre en BDD
         $orderRepository->save($order);
@@ -52,20 +51,17 @@ class OrderController extends AbstractController
     #[Route('/api/test-order', name: 'api_test_order', methods: ['GET'])]
     public function testOrder(
         OrderRepository $orderRepository,
-        ParticipantRepository $participantRepository,
         EventRepository $eventRepository
     ): JsonResponse {
-        // On récupère un Event et un Participant existants (utilise les IDs que tu as dans ta BDD)
+        // Récupération d'un Event existant (utilise les IDs que tu as dans ta BDD)
         $event = $eventRepository->find(1);
-        $participant = $participantRepository->find(1);
 
-        if (!$event || !$participant) {
-            return $this->json(['error' => 'Event or Participant not found.'], 404);
+        if (!$event) {
+            return $this->json(['error' => 'Event not found.'], 404);
         }
 
         // Création d'un Order avec un ticket
         $order = new Order();
-        $order->setParticipant($participant);
         $order->setEvent($event);
         $order->setDateCommande(new DateTime());
 
@@ -76,6 +72,7 @@ class OrderController extends AbstractController
         $ticket->setType('jour');
         $ticket->setDate(new DateTime($event->getDates()[0]));
         $ticket->setPrix($event->getPrixParJour()[$event->getDates()[0]]);
+        $ticket->setEmail('alice@example.com'); // Utilisation d'un email fictif
         $ticket->setOrder($order);
 
         // Ajout du ticket à l'ordre

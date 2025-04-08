@@ -1,10 +1,8 @@
 <?php
-
 namespace App\Entity;
 
 use App\Entity\Event;
 use App\Entity\Ticket;
-use App\Entity\Participant;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -16,10 +14,6 @@ class Order
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
-
-    #[ORM\ManyToOne(targetEntity: Participant::class)]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?Participant $participant = null;
 
     #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $dateCommande = null;
@@ -77,17 +71,6 @@ class Order
         return $this;
     }
 
-    public function getParticipant(): ?Participant
-    {
-        return $this->participant;
-    }
-
-    public function setParticipant(?Participant $participant): self
-    {
-        $this->participant = $participant;
-        return $this;
-    }
-
     /**
      * @return Collection|Ticket[]
      */
@@ -100,7 +83,7 @@ class Order
     {
         if (!$this->tickets->contains($ticket)) {
             $this->tickets[] = $ticket;
-            $ticket->setOrder($this);
+            $ticket->setOrder($this);  // Associe le ticket à cette commande
         }
         return $this;
     }
@@ -109,7 +92,7 @@ class Order
     {
         if ($this->tickets->removeElement($ticket)) {
             if ($ticket->getOrder() === $this) {
-                $ticket->setOrder(null);
+                $ticket->setOrder(null);  // Dé-associe le ticket de cette commande
             }
         }
         return $this;

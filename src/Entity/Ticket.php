@@ -21,13 +21,16 @@ class Ticket
     #[ORM\Column(length: 255)]
     private ?string $prenom = null;
 
+    #[ORM\Column(length: 255)]
+    private ?string $email = null;
+
     #[ORM\Column(type: 'date', nullable: true)]
     private ?\DateTimeInterface $date = null;
 
     #[ORM\Column]
     private ?float $prix = null;
 
-    #[ORM\ManyToOne(targetEntity: Order::class, inversedBy: 'tickets')]
+    #[ORM\ManyToOne(inversedBy: 'tickets')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Order $order = null;
 
@@ -68,6 +71,17 @@ class Ticket
     public function setPrenom(string $prenom): self
     {
         $this->prenom = $prenom;
+        return $this;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): self
+    {
+        $this->email = $email;
         return $this;
     }
 
