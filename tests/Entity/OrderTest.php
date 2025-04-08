@@ -4,7 +4,6 @@ namespace App\Tests\Entity;
 use App\Entity\Order;
 use App\Entity\Ticket;
 use App\Entity\Event;
-use App\Entity\Participant;
 use App\Service\TicketService;
 use PHPUnit\Framework\TestCase;
 
@@ -20,21 +19,20 @@ class OrderTest extends TestCase
         $event->setPrixParJour(['2025-09-15' => 70]);
         $event->setPrixMultipass(100);
 
-        $participant = new Participant();
-        $participant->setNom('Doe')->setPrenom('John')->setEmail('john.doe@example.com')->setEvent($event);
-
+        $email = 'john.doe@example.com';
         $ticketsData = [
             ['nom' => 'Doe', 'prenom' => 'John', 'type' => 'jour']
         ];
 
         $service = new TicketService();
-        $order = $service->createOrderWithTickets($participant, $event, '2025-09-15', $ticketsData);
+        $order = $service->createOrderWithTickets($email, $event, '2025-09-15', $ticketsData);
 
-        $this->assertEquals('john.doe@example.com', $order->getParticipant()->getEmail());
+        // Vérifier l'email à partir des tickets de la commande
+        $ticket = $order->getTickets()->first();  // Récupère le premier ticket
+        $this->assertEquals('john.doe@example.com', $ticket->getEmail());
         $this->assertCount(1, $order->getTickets());
         $this->assertEquals(70, $order->getTotal());
 
-        $ticket = $order->getTickets()->first();
         $this->assertEquals('Doe', $ticket->getNom());
         $this->assertEquals('John', $ticket->getPrenom());
         $this->assertEquals('2025-09-15', $ticket->getDate()->format('Y-m-d'));
@@ -51,32 +49,26 @@ class OrderTest extends TestCase
             ->setPrixParJour(['2025-07-12' => 40])
             ->setPrixMultipass(70);
 
-        $participant = new Participant();
-        $participant->setNom('Martin')->setPrenom('Bob')->setEmail('martin.bob@email.com')->setEvent($event);
+        $email = 'martin.bob@email.com';
 
-        $order = new Order();
-        $order->setDateCommande(new \DateTime())
-            ->setEvent($event)
-            ->setParticipant($participant)
-            ->setTotal(0);
+        $ticketsData = [
+            ['nom' => 'Dupont', 'prenom' => 'Alice', 'type' => 'jour'],
+            ['nom' => 'Martin', 'prenom' => 'Bob', 'type' => 'jour']
+        ];
 
-        $ticket1 = new Ticket();
-        $ticket1->setNom('Dupont')->setPrenom('Alice')->setType('journee')->setPrix(40.0)->setDate(new \DateTime('2025-07-12'))->setOrder($order);
+        $service = new TicketService();
+        $order = $service->createOrderWithTickets($email, $event, '2025-07-12', $ticketsData);
 
-        $ticket2 = new Ticket();
-        $ticket2->setNom('Martin')->setPrenom('Bob')->setType('journee')->setPrix(40.0)->setDate(new \DateTime('2025-07-12'))->setOrder($order);
-
-        $order->addTicket($ticket1);
-        $order->addTicket($ticket2);
-        $order->setTotal($ticket1->getPrix() + $ticket2->getPrix());
+        // Vérifier l'email des tickets associés à la commande
+        foreach ($order->getTickets() as $ticket) {
+            $this->assertEquals('martin.bob@email.com', $ticket->getEmail());
+        }
 
         $this->assertCount(2, $order->getTickets());
         $this->assertEquals(80.0, $order->getTotal());
-        $this->assertEquals('martin.bob@email.com', $order->getParticipant()->getEmail());
 
         foreach ($order->getTickets() as $ticket) {
             $this->assertEquals(new \DateTime('2025-07-12'), $ticket->getDate());
-            $this->assertSame($order, $ticket->getOrder());
         }
     }
 
@@ -94,15 +86,13 @@ class OrderTest extends TestCase
         ]);
         $event->setPrixMultipass(30);
 
-        $participant = new Participant();
-        $participant->setNom('Lemoine')->setPrenom('Sarah')->setEmail('sarah.lemoine@example.com')->setEvent($event);
-
+        $email = 'sarah.lemoine@example.com';
         $ticketsData = [
             ['nom' => 'Lemoine', 'prenom' => 'Sarah', 'type' => 'single']
         ];
 
         $service = new TicketService();
-        $order = $service->createOrderWithTickets($participant, $event, '2025-06-14', $ticketsData);
+        $order = $service->createOrderWithTickets($email, $event, '2025-06-14', $ticketsData);
 
         $this->assertCount(1, $order->getTickets());
         $this->assertEquals(10, $order->getTotal());
@@ -122,8 +112,7 @@ class OrderTest extends TestCase
         ]);
         $event->setPrixMultipass(30);
 
-        $participant = new Participant();
-        $participant->setNom('Lemoine')->setPrenom('Sarah')->setEmail('sarah.lemoine@example.com')->setEvent($event);
+        $email = 'sarah.lemoine@example.com';
 
         $ticketsData = [
             ['nom' => 'Lemoine', 'prenom' => 'Sarah', 'type' => 'multipass'],
@@ -131,7 +120,7 @@ class OrderTest extends TestCase
         ];
 
         $service = new TicketService();
-        $order = $service->createOrderWithTickets($participant, $event, null, $ticketsData);
+        $order = $service->createOrderWithTickets($email, $event, null, $ticketsData);
 
         $this->assertCount(2, $order->getTickets());
         $this->assertEquals(60, $order->getTotal());

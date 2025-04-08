@@ -53,39 +53,71 @@ class OrderController extends AbstractController
         OrderRepository $orderRepository,
         EventRepository $eventRepository
     ): JsonResponse {
-        // Récupération d'un Event existant (utilise les IDs que tu as dans ta BDD)
+        // Récupération d'un Event existant
         $event = $eventRepository->find(1);
-
+    
         if (!$event) {
             return $this->json(['error' => 'Event not found.'], 404);
         }
-
-        // Création d'un Order avec un ticket
+    
+        // Création d'un Order
         $order = new Order();
         $order->setEvent($event);
         $order->setDateCommande(new DateTime());
-
-        // Création d'un Ticket pour ce jour
-        $ticket = new Ticket();
-        $ticket->setNom('Durand');
-        $ticket->setPrenom('Alice');
-        $ticket->setType('jour');
-        $ticket->setDate(new DateTime($event->getDates()[0]));
-        $ticket->setPrix($event->getPrixParJour()[$event->getDates()[0]]);
-        $ticket->setEmail('alice@example.com'); // Utilisation d'un email fictif
-        $ticket->setOrder($order);
-
-        // Ajout du ticket à l'ordre
-        $order->addTicket($ticket);
-        $order->setTotal($ticket->getPrix());
-
-        // Sauvegarde en BDD
+    
+        // Exemples de tickets à ajouter
+        $ticketInfos = [
+            [
+                'nom' => 'Durand',
+                'prenom' => 'Alice',
+                'type' => 'jour',
+                'email' => 'alice@example.com',
+                'date' => $event->getDates()[0]
+            ],
+            [
+                'nom' => 'Martin',
+                'prenom' => 'Bob',
+                'type' => 'multipass',
+                'email' => 'bob@example.com',
+                'date' => null
+            ]
+        ];
+    
+        $total = 0;
+    
+        foreach ($ticketInfos as $info) {
+            $ticket = new Ticket();
+            $ticket->setNom($info['nom']);
+            $ticket->setPrenom($info['prenom']);
+            $ticket->setType($info['type']);
+            $ticket->setEmail($info['email']);
+            $ticket->setOrder($order);
+    
+            if ($info['type'] === 'multipass') {
+                $ticket->setPrix($event->getPrixMultipass());
+                $ticket->setDate(null);
+                $total += $event->getPrixMultipass();
+            } else {
+                $date = new DateTime($info['date']);
+                $ticket->setDate($date);
+                $prix = $event->getPrixParJour()[$info['date']] ?? 0;
+                $ticket->setPrix($prix);
+                $total += $prix;
+            }
+    
+            $order->addTicket($ticket);
+        }
+    
+        $order->setTotal($total);
+    
+        // Sauvegarde
         $orderRepository->save($order);
-
+    
         return $this->json([
-            'message' => 'Order created successfully ✅',
+            'message' => 'Order with multiple tickets created ✅',
             'order_id' => $order->getId(),
-            'total' => $order->getTotal()
+            'total' => $order->getTotal(),
+            'ticket_count' => count($order->getTickets())
         ]);
-    }
+    }    
 }
