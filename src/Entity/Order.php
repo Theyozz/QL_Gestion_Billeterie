@@ -84,7 +84,7 @@ class Order
     {
         if (!$this->tickets->contains($ticket)) {
             $this->tickets[] = $ticket;
-            $ticket->setOrder($this);  // Associe le ticket à cette commande
+            $ticket->setOrder($this);
         }
         return $this;
     }
@@ -93,7 +93,7 @@ class Order
     {
         if ($this->tickets->removeElement($ticket)) {
             if ($ticket->getOrder() === $this) {
-                $ticket->setOrder(null);  // Dé-associe le ticket de cette commande
+                $ticket->setOrder(null);
             }
         }
         return $this;

@@ -25,7 +25,10 @@ class EventTest extends TestCase
 
         // Assertions
         $this->assertEquals('Tournois League Of Legends', $event->getNom());
-        $this->assertEquals(['2025-09-10', '2025-09-11'], $event->getDates());
+        $this->assertEquals([
+            ['date' => '2025-09-10', 'price' => 80],
+            ['date' => '2025-09-11', 'price' => 90]
+        ], $event->getDatesWithPrices());
         $this->assertEquals('Lyon', $event->getLieu());
         $this->assertEquals(500, $event->getCapacite());
         $this->assertEquals([
