@@ -62,6 +62,32 @@
         </form>
     </div>
 
+    <hr class="my-5">
+
+<div class="container w-75 mx-auto">
+    <h2 class="mb-3">Nombre de tickets par événement</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Événement</th>
+                <th>Nombre de tickets</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in event_ticket_counts %}
+                <tr>
+                    <td>{{ data.event_nom }}</td>
+                    <td>{{ data.ticket_count }}</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="2" class="text-center">Aucun ticket enregistré pour le moment.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
     <script>
         // Définition de la fonction addTicket
         function addTicket() {

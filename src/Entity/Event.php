@@ -47,28 +47,21 @@ class Event
 
     public function getDatesWithPrices(): array
     {
-        $datesWithPrices = [];
-        
-        // Assurer que les dates sont bien au format DateTime
-        foreach ($this->dates as $date) {
-            // Vérifier si la date est un objet DateTime
-            if (!$date instanceof \DateTime) {
-                $date = new \DateTime($date);  // Si ce n'est pas un objet DateTime, on le crée
-            }
-            
-            $dateString = $date->format('Y-m-d'); // Format de la date
-            
-            // Récupérer le prix pour cette date (si disponible)
-            $price = $this->prixParJour[$dateString] ?? 0.0; // Si pas de prix, on met 0 par défaut
-            
-            $datesWithPrices[] = [
-                'date' => $dateString,
-                'price' => $price
+        $result = [];
+    
+        // Iterer sur chaque entrée de prixParJour
+        foreach ($this->prixParJour as $date => $price) {
+            // Ajouter à la liste des résultats le format de la date et son prix associé
+            $result[] = [
+                'date' => $date,   // La clé (date) de prixParJour
+                'price' => $price, // La valeur (prix) de prixParJour
             ];
         }
-        
-        return $datesWithPrices;
+    
+        return $result;
     }
+    
+    
 
     public function setDates(array $dates): self
     {

@@ -12,25 +12,38 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Doctrine\ORM\EntityManagerInterface;
 
 class OrderController extends AbstractController
 {
     #[Route('/order/new', name: 'order_form', methods: ['GET'])]
-    public function newOrder(EventRepository $eventRepository): Response
-    {
+    public function newOrder(
+        EventRepository $eventRepository, 
+        EntityManagerInterface $em
+    ): Response {
         $events = $eventRepository->findAll();
         $eventDatesWithPrices = [];
-        
+    
         foreach ($events as $event) {
-            // Utiliser la méthode getDatesWithPrices pour obtenir les dates et prix
             $eventDatesWithPrices[$event->getId()] = $event->getDatesWithPrices();
         }
     
+        // Récupérer le nombre de tickets par événement
+        $eventTicketCounts = $em->createQuery(
+            "SELECT e.nom AS event_nom, COUNT(t.id) AS ticket_count
+             FROM App\Entity\Ticket t
+             JOIN t.order o
+             JOIN o.event e
+             GROUP BY e.nom"
+        )->getResult();
+    
         return $this->render('order/form.html.twig', [
             'events' => $events,
-            'event_dates' => $eventDatesWithPrices  // Passer les dates avec les prix au template
+            'event_dates' => $eventDatesWithPrices,
+            'event_ticket_counts' => $eventTicketCounts,
         ]);
     }
+    
     #[Route('/order/create', name: 'order_create', methods: ['POST'])]
     public function createOrderFromForm(
         Request $request,

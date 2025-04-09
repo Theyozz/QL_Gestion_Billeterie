@@ -22,7 +22,7 @@ class Order
     #[ORM\Column]
     private ?float $total = null;
 
-    #[ORM\ManyToOne(targetEntity: Event::class)]
+    #[ORM\ManyToOne(targetEntity: Event::class, cascade: ['persist'])]
     #[ORM\JoinColumn(nullable: false)]
     private ?Event $event = null;
 
